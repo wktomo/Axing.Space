@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>技术专栏 | Alex.Design</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Noto+Sans+SC:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* ================= 1. 核心变量 (与首页完全同步) ================= */
+        :root { 
+            --font-main: 'Noto Sans SC', sans-serif; 
+            --font-mono: 'JetBrains Mono', monospace; 
+            --bg-color: #050505; 
+            --bg-secondary: #0a0a0a; 
+            --text-main: #ededed; 
+            --text-muted: #888888; 
+            --border-color: rgba(255, 255, 255, 0.1); 
+            --card-bg: rgba(20, 20, 20, 0.6);
+            --primary: #8b5cf6; 
+        }
+        [data-theme="light"] { 
+            --bg-color: #f4f4f5; 
+            --bg-secondary: #ffffff; 
+            --text-main: #18181b; 
+            --text-muted: #52525b; 
+            --border-color: rgba(0, 0, 0, 0.1); 
+            --card-bg: rgba(255, 255, 255, 0.8);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: var(--bg-color); color: var(--text-main); font-family: var(--font-main); min-height: 100vh; transition: 0.3s; }
+        body::after { content: ""; position: fixed; inset: 0; background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E"); pointer-events: none; z-index: 999; }
+        a { text-decoration: none; color: inherit; }
+
+        /* ================= 2. 导航栏与移动端菜单 (关键修正) ================= */
+        .navbar { position: fixed; top: 0; width: 100%; padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; z-index: 100; backdrop-filter: blur(10px); border-bottom: 1px solid transparent; transition: 0.3s;}
+        .navbar.scrolled { background: var(--bg-secondary); border-bottom: 1px solid var(--border-color); }
+        
+        .nav-links { display: flex; gap: 30px; }
+        .nav-links a:hover, .nav-links a.active { color: var(--primary); }
+
+        /* 汉堡按钮样式 */
+        .hamburger { display: none; flex-direction: column; gap: 6px; background: none; border: none; cursor: pointer; z-index: 200; }
+        .hamburger span { display: block; width: 24px; height: 2px; background-color: var(--text-main); transition: 0.3s; }
+        .hamburger.open span:nth-child(1) { transform: rotate(45deg) translate(5px, 6px); }
+        .hamburger.open span:nth-child(2) { transform: rotate(-45deg) translate(5px, -6px); }
+
+        /* 移动端全屏菜单 */
+        .mobile-menu-overlay { position: fixed; inset: 0; background: rgba(5, 5, 5, 0.95); backdrop-filter: blur(20px); z-index: 150; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+        .mobile-menu-overlay.active { opacity: 1; pointer-events: auto; }
+        .mobile-links { display: flex; flex-direction: column; gap: 30px; text-align: center; }
+        .mobile-links a { font-size: 1.5rem; font-weight: 700; color: var(--text-main); }
+
+        @media (max-width: 768px) {
+            .nav-links.desktop-menu { display: none; }
+            .hamburger { display: flex; }
+            .navbar { padding: 15px 20px; }
+        }
+
+        /* ================= 3. 博客内容样式 ================= */
+        .container { max-width: 900px; margin: 120px auto 100px; padding: 0 20px; }
+        
+        .filter-bar { display: flex; gap: 10px; margin-bottom: 50px; overflow-x: auto; padding-bottom: 5px; -webkit-overflow-scrolling: touch; }
+        .filter-btn { background: transparent; border: 1px solid var(--border-color); color: var(--text-muted); padding: 6px 16px; border-radius: 100px; font-size: 0.85rem; cursor: pointer; transition: 0.2s; font-family: var(--font-mono); white-space: nowrap; }
+        .filter-btn:hover, .filter-btn.active { border-color: var(--primary); color: var(--primary); background: rgba(139, 92, 246, 0.05); }
+
+        /* 置顶文章 */
+        .featured-post { display: grid; grid-template-columns: 1.2fr 0.8fr; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 24px; overflow: hidden; margin-bottom: 60px; transition: transform 0.3s; min-height: 320px; }
+        .featured-post:hover { transform: translateY(-4px); border-color: rgba(139, 92, 246, 0.3); }
+        .featured-content { padding: 40px; display: flex; flex-direction: column; justify-content: center; }
+        .featured-img { width: 100%; height: 100%; object-fit: cover; border-left: 1px solid var(--border-color); }
+        .badge { display: inline-block; padding: 4px 10px; background: var(--primary); color: #fff; font-size: 0.7rem; font-weight: bold; border-radius: 4px; margin-bottom: 15px; width: fit-content; }
+
+        /* 列表文章 */
+        .post-item { display: flex; justify-content: space-between; align-items: flex-start; gap: 30px; padding: 30px 0; border-bottom: 1px solid var(--border-color); transition: opacity 0.3s; }
+        .post-item:hover { opacity: 1; }
+        .post-item:hover .post-title { color: var(--primary); }
+        .post-info { flex: 1; }
+        .post-meta { font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px; display: flex; align-items: center; gap: 10px; }
+        .post-title { font-size: 1.5rem; margin-bottom: 12px; font-weight: 700; line-height: 1.3; transition: color 0.2s; }
+        .post-excerpt { color: var(--text-muted); font-size: 0.95rem; line-height: 1.6; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .post-thumb { width: 160px; height: 100px; border-radius: 12px; object-fit: cover; border: 1px solid var(--border-color); transition: transform 0.3s; filter: grayscale(40%); flex-shrink: 0; }
+        .post-item:hover .post-thumb { transform: scale(1.05); filter: grayscale(0%); }
+
+        /* --- 筛选功能新增动画样式 --- */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .filter-item {
+            /* 基础状态 */
+        }
+
+        /* 隐藏状态：完全不占用空间 */
+        .filter-item.hide {
+            display: none !important;
+        }
+
+        /* 激活时的动画 */
+        .filter-item.animate {
+            animation: fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @media (max-width: 768px) {
+            .featured-post { grid-template-columns: 1fr; grid-template-rows: auto 200px; }
+            .featured-img { border-left: none; border-top: 1px solid var(--border-color); order: -1; }
+            .post-item { flex-direction: column-reverse; gap: 15px; }
+            .post-thumb { width: 100%; height: 180px; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar" id="navbar">
+        <a href="index.html" class="logo" style="font-weight: 700; font-family: var(--font-mono);">首页</a>
+        
+        <div class="nav-links desktop-menu">
+            <a href="projects.html">精选项目</a>
+            <a href="blog.html" class="active">技术专栏</a>
+            <a href="about.html">关于我</a>
+        </div>
+
+        <div style="display: flex; gap: 15px; align-items: center;">
+            <button onclick="toggleTheme()" id="themeBtn" style="background:none; border:1px solid var(--border-color); color:inherit; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 0.8rem;">
+                主题色切换
+            </button>
+            
+            <button class="hamburger" id="hamburger" onclick="toggleMobileMenu()">
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+
+        <div class="mobile-menu-overlay" id="mobileMenu">
+            <div class="mobile-links">
+                <a href="projects.html">精选项目</a>
+                <a href="blog.html">技术专栏</a>
+                <a href="about.html">关于我</a>
+                <a href="index.html">返回首页</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <header class="section-header">
+            <h1 class="page-title">技术充电站</h1>
+            <p style="color: var(--text-muted);">分享关于技术的自己的总结</p>
+        </header>
+
+        <div class="filter-bar">
+            <button class="filter-btn active" data-filter="all">全部</button>
+            <button class="filter-btn" data-filter="featured">精选</button>
+            <button class="filter-btn" data-filter="creative">创意性</button>
+        </div>
+
+        <a href="https://blog.csdn.net/wktomo/article/details/148047205?spm=1001.2014.3001.5501" class="featured-post filter-item animate" data-category="featured" target="_blank">
+            <div class="featured-content">
+                <span class="badge">GO语言学习</span>
+                <h2 style="font-size: 2rem; margin-bottom: 15px; line-height: 1.2;">全方位的从基础到进阶学习GO语言</h2>
+                <p style="color: var(--text-muted); line-height: 1.6;">一部golang学习的不错文章，欢迎点评</p>
+                <div style="margin-top: 20px; font-family: var(--font-mono); font-size: 0.85rem; color: var(--primary);">Read Article -></div>
+            </div>
+            <img src="go图.png" class="featured-img" alt="React Concept">
+        </a>
+
+        <div class="blog-list">
+            <div style="font-family: var(--font-mono); color: var(--text-muted); font-size: 0.8rem; margin-bottom: 20px;">文章</div>
+
+            <a href="https://blog.csdn.net/wktomo/article/details/144752880?spm=1001.2014.3001.5501" class="post-item filter-item animate" data-category="featured" target="_blank">
+                <div class="post-info">
+                    <div class="post-meta"><span>2024-12-31</span> • <span style="color:var(--primary)">Engineering</span></div>
+                    <h3 class="post-title">python期末复习《基于python程序设计基础与实战》</h3>
+                    <p class="post-excerpt">这是一篇来自一个谆谆好学的少年花了大心思写的blog，希望大家能够支持</p>
+                </div>
+                <img src="python图.png" class="post-thumb" alt="CSS">
+            </a>
+
+            <a href="https://blog.csdn.net/wktomo/article/details/148345618?spm=1001.2014.3001.5501" class="post-item filter-item animate" data-category="creative" target="_blank">
+                <div class="post-info">
+                    <div class="post-meta"><span>2024-12-10</span> • <span style="color:var(--primary)">Creative</span></div>
+                    <h3 class="post-title">强化学习笔记总结（结合论文）</h3>
+                    <p class="post-excerpt">机器学习算法宝典+1</p>
+                </div>
+                <img src="插图4.jpg" class="post-thumb" alt="Garden">
+            </a>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        });
+
+        // 2. 主题切换功能
+        function toggleTheme() {
+            const html = document.documentElement;
+            const current = html.getAttribute('data-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            localStorage.setItem('theme', next);
+        }
+
+        // 3. 移动端菜单逻辑
+        function toggleMobileMenu() {
+            const hamburger = document.getElementById('hamburger');
+            const menu = document.getElementById('mobileMenu');
+            if(hamburger && menu) {
+                hamburger.classList.toggle('open');
+                menu.classList.toggle('active');
+                document.body.style.overflow = menu.classList.contains('active') ? 'hidden' : 'auto';
+            }
+        }
+
+        // 4. 滚动监听
+        window.addEventListener('scroll', () => {
+            const nav = document.getElementById('navbar');
+            if(nav) nav.classList.toggle('scrolled', window.scrollY > 50);
+        });
+        
+        // 5. 真实筛选器逻辑 (Real Filter Logic)
+        const filters = document.querySelectorAll('.filter-btn');
+        const items = document.querySelectorAll('.filter-item');
+
+        filters.forEach(btn => {
+            btn.addEventListener('click', () => {
+                // 1. 切换按钮激活状态
+                filters.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                // 2. 获取当前筛选类别
+                const filterValue = btn.getAttribute('data-filter');
+
+                // 3. 遍历所有文章项
+                items.forEach(item => {
+                    const itemCategory = item.getAttribute('data-category');
+                    
+                    // 移除之前的动画类，确保重触发
+                    item.classList.remove('animate'); 
+
+                    // 核心判断：如果是'all'或者类别匹配
+                    if (filterValue === 'all' || itemCategory === filterValue) {
+                        item.classList.remove('hide');
+                        // 强制重绘（Reflow）以触发动画
+                        void item.offsetWidth; 
+                        item.classList.add('animate');
+                    } else {
+                        item.classList.add('hide');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>关于我 | Alex.Design</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Noto+Sans+SC:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* ================= 1. 核心变量 (全站统一) ================= */
+        :root { 
+            --font-main: 'Noto Sans SC', sans-serif; 
+            --font-mono: 'JetBrains Mono', monospace; 
+            --bg-color: #050505; 
+            --bg-secondary: #0a0a0a; 
+            --text-main: #ededed; 
+            --text-muted: #888888; 
+            --border-color: rgba(255, 255, 255, 0.1); 
+            --card-bg: rgba(20, 20, 20, 0.6); 
+            --primary: #8b5cf6; 
+        }
+        [data-theme="light"] { 
+            --bg-color: #f4f4f5; 
+            --bg-secondary: #ffffff; 
+            --text-main: #18181b; 
+            --text-muted: #52525b; 
+            --border-color: rgba(0, 0, 0, 0.1); 
+            --card-bg: rgba(255, 255, 255, 0.8); 
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: var(--bg-color); color: var(--text-main); font-family: var(--font-main); transition: 0.3s; min-height: 100vh; }
+        body::after { content: ""; position: fixed; inset: 0; background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E"); pointer-events: none; z-index: 999; }
+        a { text-decoration: none; color: inherit; }
+        .navbar { position: fixed; top: 0; width: 100%; padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; z-index: 100; backdrop-filter: blur(10px); border-bottom: 1px solid transparent; transition: 0.3s; }
+        .navbar.scrolled { background: var(--bg-secondary); border-bottom: 1px solid var(--border-color); }
+        .nav-links { display: flex; gap: 30px; }
+        .nav-links a.active { color: var(--primary); }
+        /* 汉堡按钮 */
+        .hamburger { display: none; flex-direction: column; gap: 6px; background: none; border: none; cursor: pointer; z-index: 200; }
+        .hamburger span { display: block; width: 24px; height: 2px; background-color: var(--text-main); transition: 0.3s; }
+        .hamburger.open span:nth-child(1) { transform: rotate(45deg) translate(5px, 6px); }
+        .hamburger.open span:nth-child(2) { transform: rotate(-45deg) translate(5px, -6px); }
+
+        /* 移动端菜单 */
+        .mobile-menu-overlay { position: fixed; inset: 0; background: rgba(5, 5, 5, 0.95); backdrop-filter: blur(20px); z-index: 150; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+        .mobile-menu-overlay.active { opacity: 1; pointer-events: auto; }
+        .mobile-links { display: flex; flex-direction: column; gap: 30px; text-align: center; }
+        .mobile-links a { font-size: 1.5rem; font-weight: 700; color: var(--text-main); }
+
+        @media (max-width: 768px) {
+            .nav-links.desktop-menu { display: none; }
+            .hamburger { display: flex; }
+            .navbar { padding: 15px 20px; }
+            .container { grid-template-columns: 1fr; gap: 30px; }
+            .profile-card { margin-top: 30px; transform: rotate(0); }
+        }
+        .container { max-width: 1000px; margin: 120px auto 100px; padding: 0 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 50px; align-items: start; }
+        
+        .intro-text h1 { font-size: 3rem; margin-bottom: 20px; line-height: 1.1; }
+        .intro-text p { color: var(--text-muted); line-height: 1.8; margin-bottom: 20px; font-size: 1.05rem; }
+        .highlight { color: var(--primary); font-weight: 700; }
+
+        .stack-list { display: flex; gap: 15px; flex-wrap: wrap; margin-top: 30px; }
+        .stack-item { font-family: var(--font-mono); font-size: 0.85rem; padding: 6px 12px; border: 1px solid var(--border-color); border-radius: 6px; background: rgba(255,255,255,0.03); }
+
+        .profile-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 24px; padding: 20px; transform: rotate(2deg); transition: transform 0.3s; }
+        .profile-card:hover { transform: rotate(0deg); }
+        .profile-img { width: 100%; border-radius: 16px; display: block; filter: grayscale(20%); transition: 0.5s; object-fit: cover; }
+        .profile-card:hover .profile-img { filter: grayscale(0%); }
+
+        .social-links { margin-top: 30px; display: flex; gap: 20px; }
+        .social-btn { padding: 10px 20px; background: var(--text-main); color: var(--bg-color); border-radius: 100px; font-weight: bold; font-size: 0.9rem; transition: opacity 0.2s; }
+        .social-btn:hover { opacity: 0.9; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar" id="navbar">
+        <a href="index.html" class="logo" style="font-weight: 700; font-family: var(--font-mono);">首页</a>
+        
+        <div class="nav-links desktop-menu">
+            <a href="projects.html">精选项目</a>
+            <a href="blog.html">技术专栏</a>
+            <a href="about.html" class="active">关于我</a>
+        </div>
+
+        <div style="display: flex; gap: 15px; align-items: center;">
+            <button onclick="toggleTheme()" id="themeBtn" style="background:none; border:1px solid var(--border-color); color:inherit; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 0.8rem;">
+                主题色切换
+            </button>
+            
+            <button class="hamburger" id="hamburger" onclick="toggleMobileMenu()">
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+
+        <div class="mobile-menu-overlay" id="mobileMenu">
+            <div class="mobile-links">
+                <a href="projects.html">精选项目</a>
+                <a href="blog.html">技术专栏</a>
+                <a href="about.html">关于我</a>
+                <a href="index.html">返回首页</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="intro-text">
+            <h1>您好，<br>我是 <span class="highlight">阿星</span></h1>
+            <p>
+                我是一名<span class="highlight">具有创新思维的技术爱好者</span>，同时我既是AI 算法研究爱好者，也是执着的创意项目建设者，始终热衷于用技术的逻辑，编织兼具体验感与艺术性的数字作品。
+            </p>
+            <p>
+                过去 几 年里,我专注于研究自己感兴趣的AI与构建交互式数字体验。在我看来，代码从来不是冰冷的逻辑堆砌，而是设计理念的延伸与落地。我痴迷于研究自己感兴趣的领域，力求在功能与体验的平衡中，实现极致的用户感受。
+            </p>
+            <p>
+                我的另一个身份是一个喜欢动漫游戏的二次元粉
+            </p>
+
+            <div style="margin-top: 40px;">
+                <h4 style="font-family: var(--font-mono); font-size: 0.9rem; color: var(--text-muted); margin-bottom: 15px;">TECH STACK</h4>
+                <div class="stack-list">
+                    <span class="stack-item">PyTorch</span>
+                    <span class="stack-item">TensorFlow / Keras</span>
+                    <span class="stack-item">Transformers (Hugging Face)</span>
+                    <span class="stack-item">Matplotlib / Seaborn</span>
+                    <span class="stack-item">OpenCV</span>
+                    <span class="stack-item">CUDA / cuDNN</span>
+                </div>
+            </div>
+            
+
+            <div class="social-links">
+                <button onclick="showEmailOptions()" class="social-btn" style="cursor: pointer; border: none;">Email Me</button>
+                <a href="https://github.com/wktomo" target="_blank" style="padding: 10px 20px; border: 1px solid var(--border-color); border-radius: 100px;">GitHub</a>
+            </div>
+        </div>
+
+        <div class="profile-card">
+            <img src="图片3.png" class="profile-img" alt="Alex Profile">
+            <div style="margin-top: 15px; display: flex; justify-content: space-between; align-items: center; font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-muted);">
+                <span>FROM ChenDu, CN</span>
+                <span>@阿星</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        });
+
+        // 2. 切换主题
+        function toggleTheme() {
+            const html = document.documentElement;
+            const current = html.getAttribute('data-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            localStorage.setItem('theme', next);
+        }
+
+        // 3. 移动端菜单
+        function toggleMobileMenu() {
+            const hamburger = document.getElementById('hamburger');
+            const menu = document.getElementById('mobileMenu');
+            if(hamburger && menu) {
+                hamburger.classList.toggle('open');
+                menu.classList.toggle('active');
+                document.body.style.overflow = menu.classList.contains('active') ? 'hidden' : 'auto';
+            }
+        }
+        function showEmailOptions() {
+            const email = 'kimiwd113@2925.com'; 
+            navigator.clipboard.writeText(email).then(() => {
+                alert(' 邮箱已复制到剪贴板,欢迎发送邮件\n\n' + email);
+            }).catch(() => {
+                window.location.href = 'mailto:' + email;
+            });
+        }
+        // 4. 滚动监听
+        window.addEventListener('scroll', () => {
+            const nav = document.getElementById('navbar');
+            if(nav) nav.classList.toggle('scrolled', window.scrollY > 50);
+        });
+    </script>
+</body>
+</html>
